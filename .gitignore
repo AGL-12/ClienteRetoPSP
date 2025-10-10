@@ -1,0 +1,10 @@
+# Eclipse
+bin/
+.settings/
+
+# Archivos compilados
+*.class
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
