@@ -13,6 +13,9 @@ import javax.swing.JTextArea;
 import javax.swing.JCheckBox;
 import java.awt.Font;
 import java.awt.event.ActionListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 
@@ -36,12 +39,31 @@ public class VistaCliente extends JFrame implements ActionListener {
 			public void run() {
 				try {
 					VistaCliente frame = new VistaCliente();
+					iniciar();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
+
 		});
+	}
+
+	private static void iniciar() {
+		int puertoCli = 6000;
+		String ipCon = "127.0.0.1";
+		try (Socket cliente = new Socket(ipCon, puertoCli);
+				ObjectOutputStream salida = new ObjectOutputStream(cliente.getOutputStream());
+				ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());) {
+
+			System.out.println("Conexion con el servidor");
+			String mensaje = (String) entrada.readObject();
+			System.out.println("recibido: " + mensaje);
+
+			salida.writeObject("hola servidor, soy cliente");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 
 	/**
@@ -125,15 +147,14 @@ public class VistaCliente extends JFrame implements ActionListener {
 		panelFooter.add(btnEnviar);
 	}
 
-	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object src = e.getSource();
 		if (src.equals(btnConectar)) {
 
 		} else if (src.equals(btnDesconectar)) {
 
-		}else if (src.equals(btnEnviar)) {
-			
+		} else if (src.equals(btnEnviar)) {
+
 		}
 
 	}
