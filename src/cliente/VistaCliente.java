@@ -6,6 +6,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
+
 import java.awt.FlowLayout;
 import javax.swing.JTextField;
 import javax.swing.JButton;
@@ -13,57 +14,30 @@ import javax.swing.JTextArea;
 import javax.swing.JCheckBox;
 import java.awt.Font;
 import java.awt.event.ActionListener;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 
 public class VistaCliente extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-	private JTextField tfIp;
-	private JTextField tfPuerto;
-	private JTextField tfDestinatario;
-	private JTextField tfChatUsuario;
-	private JTextField tfUsuario;
-	private JButton btnConectar;
-	private JButton btnDesconectar;
+	private JTextField tfIp, tfPuerto, tfDestinatario, tfChatUsuario, tfUsuario;
+	private JButton btnConectar, btnDesconectar, btnEnviar;
 	private JLabel estadoLbl;
 	private JTextArea txtaChat;
 	private JCheckBox chckbxPrivado;
-	private JButton btnEnviar;
+	private Cliente cliente;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					VistaCliente frame = new VistaCliente();
-					iniciar();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-
 		});
-	}
-
-	private static void iniciar() {
-		int puertoCli = 6000;
-		String ipCon = "127.0.0.1";
-		try (Socket cliente = new Socket(ipCon, puertoCli);
-				ObjectOutputStream salida = new ObjectOutputStream(cliente.getOutputStream());
-				ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());) {
-
-			System.out.println("Conexion con el servidor");
-			String mensaje = (String) entrada.readObject();
-			System.out.println("recibido: " + mensaje);
-
-			salida.writeObject("hola servidor, soy cliente");
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
 	}
 
 	/**
@@ -147,16 +121,52 @@ public class VistaCliente extends JFrame implements ActionListener {
 		panelFooter.add(btnEnviar);
 	}
 
+	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object src = e.getSource();
 		if (src.equals(btnConectar)) {
-
+			conectar();
 		} else if (src.equals(btnDesconectar)) {
-
+			desconectar();
 		} else if (src.equals(btnEnviar)) {
-
+			enviarMensaje();
 		}
+	}
+
+	private void enviarMensaje() {
+		Mensaje mensaje = new Mensaje(this.tfChatUsuario.getText(), this.tfUsuario.getText(),
+				chckbxPrivado.isSelected() ? tfDestinatario.getText() : null);
+
+		if (mensaje.getContenido().isEmpty()) {
+			return;
+		}
+
+		cliente.enviarMensaje(mensaje.getContenido(), mensaje.getDestinatario());
+		tfChatUsuario.setText("");
 
 	}
 
+	private void desconectar() {
+		cliente.desconectar();
+		estadoLbl.setText("No Conectado");
+		btnConectar.setEnabled(true);
+		btnDesconectar.setEnabled(false);
+		btnEnviar.setEnabled(false);
+	}
+
+	private void conectar() {
+		String ip = tfIp.getText();
+		int puerto = Integer.parseInt(tfPuerto.getText());
+		String usuario = tfUsuario.getText();
+
+		cliente = new Cliente(ip, puerto, usuario, this);
+		cliente.conectar();
+	}
+	public void actualizarEstado(String estado) {
+        estadoLbl.setText(estado);
+    }
+
+    public void actualizarChat(String mensaje) {
+        txtaChat.append(mensaje + "\n");
+    }
 }
