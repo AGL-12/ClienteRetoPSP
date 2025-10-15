@@ -22,15 +22,27 @@ public class Cliente {
             socket = new Socket(servidorIP, puerto);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            // enviar CONNECT
+
+            // Enviar solicitud de conexión
             out.println("CONNECT:" + usuario);
-            String respuesta = in.readLine();
-            if (respuesta != null && respuesta.startsWith("OK:")) {
-                return true;
-            } else {
-                return false;
+
+            // Esperar confirmación de conexión (ignorando mensajes intermedios)
+            String respuesta;
+            while ((respuesta = in.readLine()) != null) {
+                if (respuesta.startsWith("OK:")) {
+                    return true;
+                } else if (respuesta.startsWith("ERROR:")) {
+                    System.err.println("Servidor respondió error: " + respuesta);
+                    return false;
+                } else {
+                    // Ignorar mensajes como USERLIST o SISTEMA
+                    System.out.println("Ignorado durante conexión: " + respuesta);
+                }
             }
+
+            return false;
         } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
     }

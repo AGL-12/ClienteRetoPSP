@@ -1,9 +1,10 @@
 package vista;
-import cliente.Cliente;
-import cliente.HiloEscucha;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import cliente.Cliente;
+import cliente.HiloEscucha;
 
 public class VentanaChat extends JFrame {
     private JTextArea areaChat;
@@ -88,8 +89,8 @@ public class VentanaChat extends JFrame {
         tfMensaje.addActionListener(e -> enviarMensaje());
 
         // doble clic en usuario para prefijar privado
-        listaUsuarios.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+        listaUsuarios.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2) {
                     String sel = listaUsuarios.getSelectedValue();
                     if (sel != null && !sel.equals(tfUsuario.getText())) {
@@ -105,34 +106,38 @@ public class VentanaChat extends JFrame {
         String usuario = tfUsuario.getText().trim();
         String ip = tfIP.getText().trim();
         int puerto;
+
         try {
             puerto = Integer.parseInt(tfPuerto.getText().trim());
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Puerto inválido");
             return;
         }
+
         if (usuario.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Introduce un usuario");
             return;
         }
+
         cliente = new Cliente(ip, puerto, usuario);
+        appendSistema("Intentando conectar...");
+
         boolean ok = cliente.conectar();
         if (!ok) {
-            JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor");
+            appendSistema("No se pudo conectar al servidor.");
             return;
         }
+
         appendSistema("Conectado como " + usuario);
         btnConectar.setEnabled(false);
         btnDesconectar.setEnabled(true);
         btnEnviar.setEnabled(true);
         tfUsuario.setEnabled(false);
 
-        // arrancar hilo escucha
         escuchaRunnable = new HiloEscucha(cliente, this);
         hiloEscucha = new Thread(escuchaRunnable);
         hiloEscucha.start();
 
-        // pedir lista usuarios inicial
         cliente.solicitarUsuarios();
     }
 
@@ -162,16 +167,20 @@ public class VentanaChat extends JFrame {
                 String destino = rest.substring(0, idx);
                 String msg = rest.substring(idx + 1);
                 cliente.enviarPrivado(destino, msg);
+                // Los privados sí se muestran localmente
                 appendPrivadoEnviado(destino, msg);
             }
         } else {
+            // Mensajes públicos: el servidor lo reenvía también al emisor.
+            // ❌ No lo mostramos aquí para evitar duplicado.
             cliente.enviarPublico(texto);
-            appendPublico(cliente.getUsuario(), texto); // también mostrar localmente
         }
+
         tfMensaje.setText("");
     }
 
-    // métodos que usan el hilo de la GUI directamente (llamados desde SwingUtilities.invokeLater)
+    // --- Métodos de actualización de interfaz ---
+
     public void appendPublico(String emisor, String mensaje) {
         areaChat.append("[PÚBLICO] " + emisor + ": " + mensaje + "\n");
     }
@@ -186,6 +195,13 @@ public class VentanaChat extends JFrame {
 
     public void appendSistema(String texto) {
         areaChat.append("[SISTEMA] " + texto + "\n");
+        // Si detectamos desconexión, reactivar controles
+        if (texto.toLowerCase().contains("desconect")) {
+            btnConectar.setEnabled(true);
+            btnDesconectar.setEnabled(false);
+            btnEnviar.setEnabled(false);
+            tfUsuario.setEnabled(true);
+        }
     }
 
     public void actualizarUsuarios(String commaSeparated) {
