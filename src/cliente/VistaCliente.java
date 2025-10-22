@@ -159,14 +159,19 @@ public class VistaCliente extends JFrame implements ActionListener {
 		int puerto = Integer.parseInt(tfPuerto.getText());
 		String usuario = tfUsuario.getText();
 
+		btnConectar.setEnabled(false);
+		btnDesconectar.setEnabled(true);
+		btnEnviar.setEnabled(true);
+		
 		cliente = new Cliente(ip, puerto, usuario, this);
 		cliente.conectar();
 	}
-	public void actualizarEstado(String estado) {
-        estadoLbl.setText(estado);
-    }
 
-    public void actualizarChat(String mensaje) {
-        txtaChat.append(mensaje + "\n");
-    }
+	public void actualizarEstado(String estado) {
+		estadoLbl.setText(estado);
+	}
+
+	public void actualizarChat(String mensaje) {
+		txtaChat.append(mensaje + "\n");
+	}
 }
