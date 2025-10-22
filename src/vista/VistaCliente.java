@@ -1,4 +1,4 @@
-package cliente;
+package vista;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -9,6 +9,10 @@ import javax.swing.JLabel;
 
 import java.awt.FlowLayout;
 import javax.swing.JTextField;
+
+import cliente.Cliente;
+import cliente.Mensaje;
+
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import javax.swing.JCheckBox;
